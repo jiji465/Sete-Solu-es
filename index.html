@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Regularização Fiscal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab.active {
+            border-bottom-color: #1e40af; /* blue-800 */
+            color: #1e3a8a; /* blue-900 */
+            font-weight: 600;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-in-out;
+        }
+        .accordion-button.active .accordion-arrow {
+            transform: rotate(180deg);
+        }
+        .accordion-arrow {
+            transition: transform 0.3s ease-in-out;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 220px;
+            background-color: #27272a; /* zinc-800 */
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -110px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            font-weight: 400;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Cabeçalho Principal -->
+        <header class="mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-800">Dashboard de Regularização Fiscal</h1>
+            <p class="text-md text-gray-500 mt-1">Análise de propostas para negociação de débitos.</p>
+        </header>
+
+        <!-- Sistema de Abas -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                <button class="tab active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="empresa1">
+                    Instituto Santa Gianna
+                </button>
+                <button class="tab whitespace-nowrap py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm" data-tab="drservicos">
+                    DR SERVICOS MEDICO-ODONTOLOGICOS
+                </button>
+            </nav>
+        </div>
+
+        <!-- Conteúdo das Abas -->
+        <div id="tab-contents">
+            <!-- Aba 1: Instituto de Fertilidade Natural Santa Gianna LTDA -->
+            <div id="empresa1" class="tab-content active">
+                <div class="space-y-8">
+                    <!-- 1. Resumo Geral -->
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-700 mb-4">1. Panorama Geral da Simulação</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="bg-white p-6 rounded-2xl shadow-md flex flex-col justify-center text-center"><h3 class="text-sm font-semibold text-gray-500">Valor Total do Débito</h3><p class="text-3xl font-bold text-red-600 mt-1">R$ 24.466,67</p></div>
+                            <div class="bg-white p-6 rounded-2xl shadow-md flex flex-col justify-center text-center">
+                                <div class="flex justify-center items-center gap-2">
+                                    <h3 class="text-sm font-semibold text-gray-500">Economia Total (Simulada)</h3>
+                                    <span id="sg-economia-percentual" class="bg-green-100 text-green-800 text-xs font-bold px-2.5 py-0.5 rounded-full">0,0%</span>
+                                </div>
+                                <p id="sg-desconto-total" class="text-3xl font-bold text-green-600 mt-1">R$ 0,00</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl shadow-md flex flex-col justify-center text-center"><h3 class="text-sm font-semibold text-gray-500">Valor a Pagar (Simulado)</h3><p id="sg-pagar-total" class="text-3xl font-bold text-blue-800 mt-1">R$ 0,00</p></div>
+                            <div class="bg-white p-6 rounded-2xl shadow-md flex flex-col justify-center text-center"><h3 class="text-sm font-semibold text-gray-500">Custo Mensal (Simulado)</h3><p id="sg-custo-mensal" class="text-3xl font-bold text-orange-600 mt-1">R$ 0,00</p></div>
+                        </div>
+                    </section>
+                    
+                    <!-- 2. Detalhamento dos Débitos -->
+                    <section>
+                         <h2 class="text-xl font-bold text-gray-700 mb-4">2. Análise e Simulação dos Débitos</h2>
+                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                            <!-- Coluna Conta Corrente -->
+                            <div class="space-y-6">
+                                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                    Débitos em Conta Corrente
+                                    <div class="tooltip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>
+                                        <span class="tooltiptext">Débitos recentes, ainda em cobrança administrativa pela Receita Federal, antes de serem enviados para a PGFN.</span>
+                                    </div>
+                                </h3>
+                                <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+                                    <div class="p-5 bg-yellow-50 border-b border-yellow-200"><h4 class="font-semibold text-yellow-800">Contribuições sobre a Folha</h4></div>
+                                    <div class="p-5">
+                                        <div class="border border-gray-200 p-4 rounded-lg bg-slate-50">
+                                            <div class="flex justify-between items-baseline mb-4"><span class="font-medium text-sm text-gray-600">Total Consolidado:</span><span class="font-bold text-lg text-blue-900">R$ 10.827,63</span></div>
+                                            <h5 class="text-sm font-semibold text-gray-600 mb-3 pt-4 border-t text-center">Simulador de Parcelamento</h5>
+                                            
+                                            <div class="space-y-3">
+                                                <label for="sg-cc-slider" class="flex justify-between text-sm font-medium text-gray-700"><span>Número de Parcelas:</span><span id="sg-cc-slider-value" class="font-bold text-blue-800">21</span></label>
+                                                <input id="sg-cc-slider" type="range" min="1" max="21" value="21" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                            </div>
+
+                                            <div class="mt-4 bg-slate-200/60 p-3 rounded-lg">
+                                                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Valor da Parcela (Bruto)</p>
+                                                <div class="text-center mt-1">
+                                                    <p id="sg-cc-parcela-valor" class="text-2xl font-bold text-blue-900">R$ 515,60</p>
+                                                </div>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-2 text-center">Simulação de divisão simples. Juros podem ser aplicados na consolidação.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+                                    <div class="p-5 bg-yellow-50 border-b border-yellow-200"><h4 class="font-semibold text-yellow-800">DAS do Simples Nacional</h4></div>
+                                    <div class="p-5 flex justify-between items-center">
+                                        <div><p class="text-sm text-gray-600">Período: 07/2025</p><p class="font-bold text-blue-900 text-lg">Total: R$ 95,64</p></div>
+                                        <p class="font-semibold text-red-600 bg-red-100 px-3 py-1 rounded-full text-sm">Pagamento à vista</p>
+                                    </div>
+                                </div>
+                            </div>
+                             <!-- Coluna Dívida Ativa -->
+                            <div class="space-y-6">
+                                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                    Débitos em Dívida Ativa
+                                     <div class="tooltip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>
+                                        <span class="tooltiptext">Débitos que não foram pagos e agora estão sob cobrança da Procuradoria-Geral da Fazenda Nacional (PGFN).</span>
+                                    </div>
+                                </h3>
+                                <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+                                    <div class="p-5 bg-red-50 border-b border-red-200"><h4 class="font-semibold text-red-800">Contribuições (IRPJ e Outros)</h4><p class="text-sm text-gray-500">Valor Original: R$ 10.945,19</p></div>
+                                    <div class="p-5">
+                                        <div class="bg-white p-4 rounded-xl mb-4"><h5 class="font-semibold text-center text-gray-600">Comparativo das Propostas</h5><canvas id="irpjChart"></canvas></div>
+                                        <fieldset id="irpj-options" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></fieldset>
+                                        <!-- ACORDEÃO PARA IRPJ -->
+                                        <div class="mt-4 border-t pt-4">
+                                            <button class="accordion-button w-full flex justify-between items-center text-left font-semibold text-gray-700 hover:text-gray-900 transition">
+                                                <span>Ver Detalhes da Dívida</span>
+                                                <svg class="accordion-arrow w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                                            </button>
+                                            <div class="accordion-content">
+                                                <div id="sg-da-irpj-details" class="mt-2 p-2 bg-slate-50 rounded-md">
+                                                    <!-- A tabela será injetada aqui pelo JavaScript -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- FIM DO ACORDEÃO -->
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+                                    <div class="p-5 bg-red-50 border-b border-red-200"><h4 class="font-semibold text-red-800">Contribuições (Previdenciário)</h4><p class="text-sm text-gray-500">Valor Original: R$ 2.598,21</p></div>
+                                    <div class="p-5">
+                                        <div class="bg-white p-4 rounded-xl mb-4"><h5 class="font-semibold text-center text-gray-600">Comparativo das Propostas</h5><canvas id="prevChart"></canvas></div>
+                                        <fieldset id="prev-options" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></fieldset>
+                                        <!-- ACORDEÃO ADICIONADO PARA CORRIGIR O ERRO -->
+                                        <div class="mt-4 border-t pt-4">
+                                            <button class="accordion-button w-full flex justify-between items-center text-left font-semibold text-gray-700 hover:text-gray-900 transition">
+                                                <span>Ver Detalhes da Dívida</span>
+                                                <svg class="accordion-arrow w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                                            </button>
+                                            <div class="accordion-content">
+                                                <div id="sg-da-prev-details" class="mt-2 p-2 bg-slate-50 rounded-md">
+                                                    <!-- A tabela será injetada aqui pelo JavaScript -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- FIM DO ACORDEÃO -->
+                                    </div>
+                                </div>
+                            </div>
+                         </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Aba 2: DR SERVICOS -->
+            <div id="drservicos" class="tab-content">
+                <div class="space-y-8">
+                    <!-- 1. Resumo Geral -->
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-700 mb-4">1. Panorama Geral da Simulação</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="bg-white p-6 rounded-2xl shadow-md flex flex-col justify-center text-center"><h3 class="text-sm font-semibold text-gray-500">Valor Total do Débito</h3><p class="text-3xl font-bold text-red-600 mt-1">R$ 10.157,91</p></div>
+                            <div class="bg-white p-6 rounded-2xl shadow-md flex flex-col justify-center text-center">
+                                <h3 class="text-sm font-semibold text-gray-500">Economia Total</h3>
+                                <p id="dr-desconto-total" class="text-3xl font-bold text-green-600 mt-1">R$ 0,00</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl shadow-md flex flex-col justify-center text-center"><h3 class="text-sm font-semibold text-gray-500">Valor a Pagar</h3><p id="dr-pagar-total" class="text-3xl font-bold text-blue-800 mt-1">R$ 10.157,91</p></div>
+                            <div class="bg-white p-6 rounded-2xl shadow-md flex flex-col justify-center text-center"><h3 class="text-sm font-semibold text-gray-500">Custo Mensal (Parcelas)</h3><p id="dr-custo-mensal" class="text-3xl font-bold text-orange-600 mt-1">R$ 822,80</p></div>
+                        </div>
+                    </section>
+                    
+                    <!-- 2. Detalhamento dos Débitos -->
+                    <section>
+                         <h2 class="text-xl font-bold text-gray-700 mb-4">2. Análise e Simulação dos Débitos</h2>
+                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                            <!-- Coluna Conta Corrente -->
+                            <div class="space-y-6">
+                                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                    Débitos em Conta Corrente
+                                    <div class="tooltip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>
+                                        <span class="tooltiptext">Débitos recentes, ainda em cobrança administrativa pela Receita Federal, antes de serem enviados para a PGFN.</span>
+                                    </div>
+                                </h3>
+                                <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+                                    <div class="p-5 bg-yellow-50 border-b border-yellow-200"><h4 class="font-semibold text-yellow-800">Contribuições Diversas</h4></div>
+                                    <div class="p-5">
+                                        <div class="border border-gray-200 p-4 rounded-lg bg-slate-50">
+                                            <div class="flex justify-between items-baseline mb-4"><span class="font-medium text-sm text-gray-600">Saldo a Parcelar:</span><span class="font-bold text-lg text-blue-900">R$ 4.570,55</span></div>
+                                            <h5 class="text-sm font-semibold text-gray-600 mb-3 pt-4 border-t text-center">Proposta de Parcelamento</h5>
+                                            <div class="space-y-3">
+                                                <div class="bg-slate-200/60 p-3 rounded-lg"><p class="text-xs font-bold text-gray-500 uppercase tracking-wider">ENTRADA</p><div class="flex items-baseline justify-between mt-1"><p class="text-2xl font-bold text-blue-900">1x</p><p class="text-lg font-semibold text-blue-900">R$ 507,83</p></div></div>
+                                                <div class="bg-slate-200/60 p-3 rounded-lg"><p class="text-xs font-bold text-gray-500 uppercase tracking-wider">PARCELAMENTO</p><div class="flex items-baseline justify-between mt-1"><p class="text-2xl font-bold text-blue-900">8x</p><p class="text-lg font-semibold text-blue-900">R$ 507,84</p></div></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+                                    <div class="p-5 bg-yellow-50 border-b border-yellow-200"><h4 class="font-semibold text-yellow-800">DAS do Simples Nacional</h4></div>
+                                    <div class="p-5">
+                                        <div class="border border-gray-200 p-4 rounded-lg bg-slate-50">
+                                            <div class="flex justify-between items-baseline mb-4"><span class="font-medium text-sm text-gray-600">Saldo a Parcelar:</span><span class="font-bold text-lg text-blue-900">R$ 4.409,43</span></div>
+                                            <h5 class="text-sm font-semibold text-gray-600 mb-3 pt-4 border-t text-center">Proposta de Parcelamento</h5>
+                                            <div class="space-y-3">
+                                                <div class="bg-slate-200/60 p-3 rounded-lg"><p class="text-xs font-bold text-gray-500 uppercase tracking-wider">ENTRADA</p><div class="flex items-baseline justify-between mt-1"><p class="text-2xl font-bold text-blue-900">1x</p><p class="text-lg font-semibold text-blue-900">R$ 314,95</p></div></div>
+                                                <div class="bg-slate-200/60 p-3 rounded-lg"><p class="text-xs font-bold text-gray-500 uppercase tracking-wider">PARCELAMENTO</p><div class="flex items-baseline justify-between mt-1"><p class="text-2xl font-bold text-blue-900">13x</p><p class="text-lg font-semibold text-blue-900">R$ 314,96</p></div></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                             <!-- Coluna Dívida Ativa -->
+                            <div class="space-y-6">
+                                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                    Débitos em Dívida Ativa
+                                     <div class="tooltip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>
+                                        <span class="tooltiptext">Débitos que não foram pagos e agora estão sob cobrança da Procuradoria-Geral da Fazenda Nacional (PGFN).</span>
+                                    </div>
+                                </h3>
+                                <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+                                    <div class="p-5 bg-red-50 border-b border-red-200"><h4 class="font-semibold text-red-800">Débitos Previdenciários</h4><p class="text-sm text-gray-500">Valor Original: R$ 1.177,93</p></div>
+                                    <div class="p-5">
+                                        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4" role="alert">
+                                            <p class="font-bold">Negociação Indisponível</p>
+                                            <p>Não é possível pagar/negociar, pois sua inscrição foi enviada para protesto. Aguarde a notificação do tabelionato.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                         </div>
+                    </section>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const chartInstances = {};
+
+        const chartTooltip = { callbacks: { label: function(context) { return ` ${context.dataset.label}: R$ ${context.formattedValue}`; } } };
+        const chartOptionsBar = { responsive: true, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } } , x: { grid: { display: false } } }, plugins: { legend: { position: 'top' }, tooltip: chartTooltip } };
+        
+        // --- ESTADO INICIAL ---
+        const estado = {
+            santaGianna: {
+                contaCorrenteFolha: { valorPagar: 10827.63, valorMensal: 515.60 },
+                contaCorrenteSimples: 95.64,
+                dividaAtivaIRPJ: { valorPagar: 0, desconto: 0, valorOriginal: 10945.19, valorMensal: 0 },
+                dividaAtivaPrev: { valorPagar: 0, desconto: 0, valorOriginal: 2598.21, valorMensal: 0 }
+            },
+             drServicos: {
+                contaCorrenteContrib: { valorPagar: 4570.55, valorMensal: 507.84 },
+                contaCorrenteDas: { valorPagar: 4409.43, valorMensal: 314.96 },
+                dividaAtiva: { valorPagar: 1177.93, desconto: 0, valorOriginal: 1177.93, valorMensal: 0 }
+            }
+        };
+
+        const formatCurrency = (value) => `R$ ${value.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`;
+
+        // --- FUNÇÕES DE ATUALIZAÇÃO ---
+
+        function atualizarResumoSantaGianna() {
+            const irpjSelecionado = document.querySelector('input[name="sg-irpj-option"]:checked');
+            const prevSelecionado = document.querySelector('input[name="sg-prev-option"]:checked');
+
+            if (irpjSelecionado) {
+                estado.santaGianna.dividaAtivaIRPJ.valorPagar = parseFloat(irpjSelecionado.dataset.valorPagar);
+                estado.santaGianna.dividaAtivaIRPJ.desconto = parseFloat(irpjSelecionado.dataset.desconto);
+                estado.santaGianna.dividaAtivaIRPJ.valorMensal = parseFloat(irpjSelecionado.dataset.valorMensal);
+            }
+
+            if (prevSelecionado) {
+                estado.santaGianna.dividaAtivaPrev.valorPagar = parseFloat(prevSelecionado.dataset.valorPagar);
+                estado.santaGianna.dividaAtivaPrev.desconto = parseFloat(prevSelecionado.dataset.desconto);
+                estado.santaGianna.dividaAtivaPrev.valorMensal = parseFloat(prevSelecionado.dataset.valorMensal);
+            }
+            
+            const totalDesconto = estado.santaGianna.dividaAtivaIRPJ.desconto + estado.santaGianna.dividaAtivaPrev.desconto;
+            const valorOriginalDividaAtiva = estado.santaGianna.dividaAtivaIRPJ.valorOriginal + estado.santaGianna.dividaAtivaPrev.valorOriginal;
+            const porcentagemEconomia = valorOriginalDividaAtiva > 0 ? (totalDesconto / valorOriginalDividaAtiva) * 100 : 0;
+            
+            const valorTotalCCSimulado = estado.santaGianna.contaCorrenteFolha.valorPagar;
+            const totalPagar = valorTotalCCSimulado + estado.santaGianna.contaCorrenteSimples + estado.santaGianna.dividaAtivaIRPJ.valorPagar + estado.santaGianna.dividaAtivaPrev.valorPagar;
+            
+            const custoMensalTotal = estado.santaGianna.contaCorrenteFolha.valorMensal + estado.santaGianna.dividaAtivaIRPJ.valorMensal + estado.santaGianna.dividaAtivaPrev.valorMensal;
+
+            document.getElementById('sg-desconto-total').textContent = formatCurrency(totalDesconto);
+            document.getElementById('sg-pagar-total').textContent = formatCurrency(totalPagar);
+            document.getElementById('sg-economia-percentual').textContent = `${porcentagemEconomia.toFixed(1).replace('.', ',')}%`;
+            document.getElementById('sg-custo-mensal').textContent = formatCurrency(custoMensalTotal);
+
+            if (chartInstances.irpjChart && irpjSelecionado) {
+                const selectedIndex = parseInt(irpjSelecionado.dataset.index);
+                const colors = chartInstances.irpjChart.data.datasets[1].data.map((_, i) => i === selectedIndex ? '#1d4ed8' : '#9ca3af');
+                chartInstances.irpjChart.data.datasets[1].backgroundColor = colors;
+                chartInstances.irpjChart.update();
+            }
+            if (chartInstances.prevChart && prevSelecionado) {
+                const selectedIndex = parseInt(prevSelecionado.dataset.index);
+                const colors = chartInstances.prevChart.data.datasets[1].data.map((_, i) => i === selectedIndex ? '#1d4ed8' : '#9ca3af');
+                chartInstances.prevChart.data.datasets[1].backgroundColor = colors;
+                chartInstances.prevChart.update();
+            }
+        }
+
+        function atualizarSimulacaoContaCorrente(sliderId, valueId, parcelaId, stateKey, subKey) {
+            const slider = document.getElementById(sliderId);
+            const numParcelas = parseInt(slider.value);
+            document.getElementById(valueId).textContent = numParcelas;
+            
+            const valorDebito = estado[stateKey][subKey].valorPagar;
+            const valorParcela = valorDebito / numParcelas;
+            
+            document.getElementById(parcelaId).textContent = formatCurrency(valorParcela);
+            estado[stateKey][subKey].valorMensal = valorParcela;
+            
+            if(stateKey === 'santaGianna') {
+                atualizarResumoSantaGianna();
+            }
+        }
+        
+        function atualizarResumoDRServicos() {
+            const custoMensalTotal = estado.drServicos.contaCorrenteContrib.valorMensal + estado.drServicos.contaCorrenteDas.valorMensal;
+            document.getElementById('dr-custo-mensal').textContent = formatCurrency(custoMensalTotal);
+        }
+        
+
+        // --- INICIALIZAÇÃO DOS GRÁFICOS ---
+        const initEmpresa1Charts = () => {
+            if (!chartInstances.irpjChart) {
+                chartInstances.irpjChart = new Chart(document.getElementById('irpjChart').getContext('2d'), { type: 'bar', data: { labels: ['Opção 2', 'Opção 3'], datasets: [{ label: 'Total sem Desconto', data: [10945.19, 10945.19], backgroundColor: '#d1d5db', borderRadius: 5 }, { label: 'Total a Pagar', data: [8161.14, 7983.44], backgroundColor: ['#9ca3af', '#9ca3af'], borderRadius: 5 }] }, options: chartOptionsBar });
+                chartInstances.prevChart = new Chart(document.getElementById('prevChart').getContext('2d'), { type: 'bar', data: { labels: ['Opção 2', 'Opção 3'], datasets: [{ label: 'Total sem Desconto', data: [2598.21, 2598.21], backgroundColor: '#d1d5db', borderRadius: 5 }, { label: 'Total a Pagar', data: [1937.34, 1895.15], backgroundColor: ['#9ca3af', '#9ca3af'], borderRadius: 5 }] }, options: chartOptionsBar });
+                
+                document.getElementById('sg-cc-slider').addEventListener('input', () => atualizarSimulacaoContaCorrente('sg-cc-slider', 'sg-cc-slider-value', 'sg-cc-parcela-valor', 'santaGianna', 'contaCorrenteFolha'));
+                atualizarResumoSantaGianna();
+            }
+        };
+
+        const initDRServicosCharts = () => {
+            // No charts to init
+        };
+
+        // --- CONTROLES DE UI (ABAS E ACORDEÃO) ---
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(item => item.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const targetId = tab.dataset.tab;
+                const target = document.getElementById(targetId);
+                tabContents.forEach(content => content.classList.remove('active'));
+                if (target) { target.classList.add('active'); }
+
+                if (targetId === 'empresa1') initEmpresa1Charts();
+                if (targetId === 'drservicos') initDRServicosCharts();
+            });
+        });
+
+        const accordionButtons = document.querySelectorAll('.accordion-button');
+        accordionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+                button.classList.toggle('active');
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        });
+
+        // --- CRIAÇÃO DE CONTEÚDO DINÂMICO ---
+        const createPaymentStructure = (installments) => {
+            let html = '<div class="space-y-3">';
+            if(installments.entrada) {
+                html += `<div class="bg-slate-200/60 p-3 rounded-lg"><p class="text-xs font-bold text-gray-500 uppercase tracking-wider">ENTRADA</p><div class="flex items-baseline justify-between mt-1"><p class="text-2xl font-bold text-blue-900">${installments.entrada.qnt}x</p><p class="text-lg font-semibold text-blue-900">R$ ${installments.entrada.valor}</p></div></div>`;
+            }
+            if(installments.parcelamento) {
+                 html += `<div class="bg-slate-200/60 p-3 rounded-lg"><p class="text-xs font-bold text-gray-500 uppercase tracking-wider">PARCELAMENTO</p><div class="flex items-baseline justify-between mt-1"><p class="text-2xl font-bold text-blue-900">${installments.parcelamento.qnt}x</p><p class="text-lg font-semibold text-blue-900">R$ ${installments.parcelamento.valor}</p></div></div>`;
+            }
+            return html + '</div>';
+        };
+        
+        const createSelectableOptionCard = (groupName, id, index, title, details, payment, isChecked=false) => {
+            const valorMensal = payment.parcelamento ? payment.parcelamento.valor.replace('.', '').replace(',', '.') : '0';
+            return `
+            <div>
+                <input type="radio" name="${groupName}" id="${id}" class="hidden peer" 
+                       data-valor-pagar="${details['Total a Pagar'].value}" 
+                       data-desconto="${details['Desconto'].value}"
+                       data-valor-mensal="${valorMensal}"
+                       data-index="${index}" ${isChecked ? 'checked' : ''}>
+                <label for="${id}" class="block border-2 p-4 rounded-lg bg-slate-50 cursor-pointer peer-checked:border-blue-600 peer-checked:ring-2 peer-checked:ring-blue-200 transition-all duration-200 h-full">
+                    <h4 class="font-bold text-gray-700 mb-3">${title}</h4>
+                    <div class="flex-grow space-y-2">
+                        ${Object.entries(details).map(([key, value]) => `
+                            <div class="flex justify-between items-baseline">
+                                <span class="font-medium text-sm text-gray-600">${key}:</span>
+                                <span class="font-semibold" style="color:${value.color || '#1e3a8a'}">${value.text}</span>
+                            </div>`).join('')}
+                    </div>
+                    <div class="mt-4 pt-4 border-t">
+                        <h5 class="text-sm font-semibold text-gray-600 mb-3 text-center">Estrutura de Pagamento</h5>
+                        ${createPaymentStructure(payment)}
+                    </div>
+                </label>
+            </div>`;
+        };
+
+        // --- INJEÇÃO DE CONTEÚDO DINÂMICO ---
+        
+        // Santa Gianna
+        document.getElementById('irpj-options').innerHTML = 
+            createSelectableOptionCard('sg-irpj-option', 'sg-irpj-op2', 0, 'Opção 2 (Com entrada)', {'Desconto': {text:'R$ 2.784,05', value: 2784.05, color:'#16a34a'}, 'Total a Pagar': {text: 'R$ 8.161,14', value: 8161.14}}, {entrada:{qnt:6, valor:'109,45'}, parcelamento:{qnt:14, valor:'536,02'}}) +
+            createSelectableOptionCard('sg-irpj-option', 'sg-irpj-op3', 1, 'Opção 3 (Sem entrada)', {'Desconto': {text:'R$ 2.961,75', value: 2961.75, color:'#16a34a'}, 'Total a Pagar': {text: 'R$ 7.983,44', value: 7983.44}}, {parcelamento:{qnt:6, valor:'1.330,57'}}, true);
+
+        document.getElementById('prev-options').innerHTML = 
+            createSelectableOptionCard('sg-prev-option', 'sg-prev-op1', 0, 'Opção 2', {'Desconto': {text:'R$ 660,87', value: 660.87, color:'#16a34a'}, 'Total a Pagar': {text: 'R$ 1.937,34', value: 1937.34}}, {entrada:{qnt:1, valor:'155,89'}, parcelamento:{qnt:17, valor:'104,78'}}) +
+            createSelectableOptionCard('sg-prev-option', 'sg-prev-op3', 1, 'Opção 3 (Sem entrada)', {'Desconto': {text:'R$ 703,06', value: 703.06, color:'#16a34a'}, 'Total a Pagar': {text: 'R$ 1.895,15', value: 1895.15}}, {parcelamento:{qnt:6, valor:'315,85'}}, true);
+
+        document.querySelectorAll('input[name="sg-irpj-option"], input[name="sg-prev-option"]').forEach(radio => radio.addEventListener('change', atualizarResumoSantaGianna));
+        
+        // Tabelas
+        const sgDaIrpjTable = `<table class="w-full text-sm text-left text-gray-600"><thead class="text-xs text-gray-700 uppercase bg-gray-100"><tr><th class="px-4 py-2">Tipo</th><th class="px-4 py-2">Período de Apuração</th><th class="px-4 py-2 text-right">Valor Consolidado</th></tr></thead><tbody>
+<tr class="border-b"><td class="px-4 py-2 font-medium">Contribuições sobre a Folha</td><td class="px-4 py-2">01/2024 a 07/2024 e 09/2024</td><td class="px-4 py-2 text-right">R$ 10.945,19</td></tr></tbody></table>`;
+        const sgDaPrevTable = `<table class="w-full text-sm text-left text-gray-600"><thead class="text-xs text-gray-700 uppercase bg-gray-100"><tr><th class="px-4 py-2">Período de Apuração</th><th class="px-4 py-2 text-right">Valor Consolidado</th></tr></thead><tbody>
+<tr class="border-b"><td class="px-4 py-2">01/2024</td><td class="px-4 py-2 text-right">R$ 1.299,10</td></tr>
+<tr class="bg-gray-50"><td class="px-4 py-2">02/2024</td><td class="px-4 py-2 text-right">R$ 1.299,11</td></tr></tbody></table>`;
+        
+        const sgDaIrpjDetailsElement = document.getElementById('sg-da-irpj-details');
+        if (sgDaIrpjDetailsElement) {
+            sgDaIrpjDetailsElement.innerHTML = sgDaIrpjTable;
+        }
+
+        const sgDaPrevDetailsElement = document.getElementById('sg-da-prev-details');
+        if (sgDaPrevDetailsElement) {
+            sgDaPrevDetailsElement.innerHTML = sgDaPrevTable;
+        }
+        
+        // Init charts for the active tab
+        const activeTab = document.querySelector('.tab.active').dataset.tab;
+        if(activeTab === 'empresa1') initEmpresa1Charts();
+        if(activeTab === 'drservicos') initDRServicosCharts();
+
+    });
+</script>
+
+</body>
+</html>
+
